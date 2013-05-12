@@ -3,7 +3,7 @@ package essua.idea.m2estorm;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtil;
-import essua.idea.m2estorm.dic.FactoriesParser;
+import essua.idea.m2estorm.dic.FactoryConfigParser;
 import org.jetbrains.annotations.NotNull;
 import org.xml.sax.SAXException;
 
@@ -16,7 +16,7 @@ import java.util.Map;
 public class M2EProjectComponent implements ProjectComponent {
 
     private static final String COMPONENT_NAME = "M2EProjectComponent";
-    private static final String FACTORIES_FILE_PATH = "factories.xml";
+    private static final String FACTORIES_FILE_PATH = "m2estorm.xml";
 
     private Project project;
 
@@ -49,12 +49,7 @@ public class M2EProjectComponent implements ProjectComponent {
         return COMPONENT_NAME;
     }
 
-    public Map<String, Integer> getFactoriesMap()
-    {
-        if (factoriesMap != null) {
-            return factoriesMap;
-        }
-
+    public Map<String, Integer> getFactoriesMap() {
         String defaultFactoriesFilePath = getPath(project, FACTORIES_FILE_PATH);
 
         File xmlFile = new File(defaultFactoriesFilePath);
@@ -68,8 +63,8 @@ public class M2EProjectComponent implements ProjectComponent {
         }
 
         try {
-            FactoriesParser factoriesParser = new FactoriesParser();
-            factoriesMap = factoriesParser.parse(xmlFile);
+            FactoryConfigParser factoryConfigParser = new FactoryConfigParser();
+            factoriesMap = factoryConfigParser.parse(xmlFile);
             factoriesMapLastModified = xmlFileLastModified;
 
             return factoriesMap;
