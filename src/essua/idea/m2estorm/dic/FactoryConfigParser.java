@@ -1,5 +1,6 @@
 package essua.idea.m2estorm.dic;
 
+import essua.idea.m2estorm.dic.FactoryMap;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -11,7 +12,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 public class FactoryConfigParser {
@@ -23,15 +26,16 @@ public class FactoryConfigParser {
         documentBuilder = dbFactory.newDocumentBuilder();
     }
 
-    public Map<String, Integer> parse(InputStream stream) throws IOException, SAXException {
+    public FactoryMap parse(InputStream stream) throws IOException, SAXException {
         return parse(documentBuilder.parse(stream));
     }
 
-    public Map<String, Integer> parse(File file) throws IOException, SAXException {
+    public FactoryMap parse(File file) throws IOException, SAXException {
         return parse(documentBuilder.parse(file));
     }
 
-    public Map<String, Integer> parse(Document document) {
+    public FactoryMap parse(Document document) {
+        HashSet<String> set = new HashSet<String>();
         Map<String, Integer> map = new HashMap<String, Integer>();
 
         NodeList servicesNodes = document.getElementsByTagName("factory");
@@ -53,10 +57,11 @@ public class FactoryConfigParser {
                 entityArgumentPosition = 0;
             }
 
+            set.add(methodName);
             map.put("\\" + className + "." + methodName, entityArgumentPosition);
         }
 
-        return map;
+        return new FactoryMap(map, set);
     }
 
 }

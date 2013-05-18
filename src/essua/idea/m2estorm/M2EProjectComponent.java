@@ -4,14 +4,13 @@ import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtil;
 import essua.idea.m2estorm.dic.FactoryConfigParser;
+import essua.idea.m2estorm.dic.FactoryMap;
 import org.jetbrains.annotations.NotNull;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class M2EProjectComponent implements ProjectComponent {
 
@@ -20,8 +19,8 @@ public class M2EProjectComponent implements ProjectComponent {
 
     private Project project;
 
-    private Map<String, Integer> factoriesMap;
-    private Long factoriesMapLastModified;
+    private FactoryMap factoryMap;
+    private Long factoryMapLastModified;
 
     public M2EProjectComponent(Project project) {
         this.project = project;
@@ -49,31 +48,31 @@ public class M2EProjectComponent implements ProjectComponent {
         return COMPONENT_NAME;
     }
 
-    public Map<String, Integer> getFactoriesMap() {
+    public FactoryMap getFactoryMap() {
         String defaultFactoriesFilePath = getPath(project, FACTORIES_FILE_PATH);
 
         File xmlFile = new File(defaultFactoriesFilePath);
         if (!xmlFile.exists()) {
-            return new HashMap<String, Integer>();
+            return new FactoryMap();
         }
 
         Long xmlFileLastModified = xmlFile.lastModified();
-        if (xmlFileLastModified.equals(factoriesMapLastModified)) {
-            return factoriesMap;
+        if (xmlFileLastModified.equals(factoryMapLastModified)) {
+            return factoryMap;
         }
 
         try {
             FactoryConfigParser factoryConfigParser = new FactoryConfigParser();
-            factoriesMap = factoryConfigParser.parse(xmlFile);
-            factoriesMapLastModified = xmlFileLastModified;
+            factoryMap = factoryConfigParser.parse(xmlFile);
+            factoryMapLastModified = xmlFileLastModified;
 
-            return factoriesMap;
+            return factoryMap;
         } catch (SAXException ignored) {
         } catch (IOException ignored) {
         } catch (ParserConfigurationException ignored) {
         }
 
-        return new HashMap<String, Integer>();
+        return new FactoryMap();
     }
 
     private String getPath(Project project, String path) {

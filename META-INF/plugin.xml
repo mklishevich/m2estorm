@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>essua.idea.m2estorm</id>
   <name>M2EStorm</name>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <vendor email="m.klishevich@ess-ua.com" url="http://www.ess-ua.com">ESS-UA</vendor>
 
   <description><![CDATA[
@@ -13,7 +13,14 @@
 </ul>
       ]]></description>
 
-  <change-notes><![CDATA[]]></change-notes>
+  <change-notes><![CDATA[
+
+<h2>0.0.2</h2>
+<ul>
+    <li>Fix PhpStorm freeze</li>
+</ul>
+
+  ]]></change-notes>
 
   <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
   <idea-version since-build="129.196"/>
