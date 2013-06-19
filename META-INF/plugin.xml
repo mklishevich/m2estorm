@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>essua.idea.m2estorm</id>
   <name>M2EStorm</name>
-  <version>0.0.2</version>
+  <version>0.0.3</version>
   <vendor email="m.klishevich@ess-ua.com" url="http://www.ess-ua.com">ESS-UA</vendor>
 
   <description><![CDATA[
@@ -15,6 +15,11 @@
 
   <change-notes><![CDATA[
 
+<h2>0.0.3</h2>
+<ul>
+    <li>Use new Php Type API</li>
+</ul>
+
 <h2>0.0.2</h2>
 <ul>
     <li>Fix PhpStorm freeze</li>
@@ -23,7 +28,7 @@
   ]]></change-notes>
 
   <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
-  <idea-version since-build="129.196"/>
+  <idea-version since-build="129.757"/>
 
   <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
        on how to target different products -->
@@ -47,7 +52,7 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->
-      <php.typeProvider implementation="essua.idea.m2estorm.dic.FactoryTypeProvider"/>
+      <php.typeProvider2 implementation="essua.idea.m2estorm.dic.FactoryTypeProvider"/>
   </extensions>
 
   <depends>com.jetbrains.php</depends>

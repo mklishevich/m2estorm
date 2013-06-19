@@ -4,13 +4,14 @@ import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtil;
 import essua.idea.m2estorm.dic.FactoryConfigParser;
-import essua.idea.m2estorm.dic.FactoryMap;
 import org.jetbrains.annotations.NotNull;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class M2EProjectComponent implements ProjectComponent {
 
@@ -19,7 +20,7 @@ public class M2EProjectComponent implements ProjectComponent {
 
     private Project project;
 
-    private FactoryMap factoryMap;
+    private Map<String, Integer> factoryMap;
     private Long factoryMapLastModified;
 
     public M2EProjectComponent(Project project) {
@@ -48,12 +49,17 @@ public class M2EProjectComponent implements ProjectComponent {
         return COMPONENT_NAME;
     }
 
-    public FactoryMap getFactoryMap() {
+    public Map<String, Integer> getFactoryMap() {
+        if (null != factoryMap) {
+            return factoryMap;
+        }
+
         String defaultFactoriesFilePath = getPath(project, FACTORIES_FILE_PATH);
 
         File xmlFile = new File(defaultFactoriesFilePath);
         if (!xmlFile.exists()) {
-            return new FactoryMap();
+            factoryMap = new HashMap<String, Integer>();
+            return factoryMap;
         }
 
         Long xmlFileLastModified = xmlFile.lastModified();
@@ -72,7 +78,7 @@ public class M2EProjectComponent implements ProjectComponent {
         } catch (ParserConfigurationException ignored) {
         }
 
-        return new FactoryMap();
+        return new HashMap<String, Integer>();
     }
 
     private String getPath(Project project, String path) {

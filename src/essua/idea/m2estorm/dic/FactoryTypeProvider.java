@@ -1,95 +1,134 @@
 package essua.idea.m2estorm.dic;
 
-import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiReference;
+import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.MethodReference;
 import com.jetbrains.php.lang.psi.elements.Method;
-import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
-import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import com.jetbrains.php.lang.psi.resolve.types.PhpTypeProvider;
+import com.jetbrains.php.lang.psi.elements.PhpNamedElement;
+import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
+import com.jetbrains.php.lang.psi.resolve.types.PhpTypeProvider2;
 import essua.idea.m2estorm.M2EProjectComponent;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Pattern;
 
-public class FactoryTypeProvider implements PhpTypeProvider {
+public class FactoryTypeProvider implements PhpTypeProvider2 {
 
-    private FactoryMap factoryMap = null;
+    private Map<String, Integer> factoryMap = null;
+    final static char TRIM_KEY = '\u0180';
+    final static String PARAM_SEPARATOR = "---";
+    private static Pattern helperRegExpPattern = Pattern.compile("Mage.helper.M2ePro/Component");
 
-    @Nullable
     @Override
-    public PhpType getType(PsiElement e) {
-        if (DumbService.getInstance(e.getProject()).isDumb()) {
-            return null;
-        }
-
-        String calledMethodFQN = getCalledMethodFQN(e);
-
-        if (null == calledMethodFQN) {
-            return null;
-        }
-
-        Map<String, Integer> classMethods = getFactoryMap(e.getProject()).getClassMethods();
-
-        if (!classMethods.containsKey(calledMethodFQN)) {
-            return null;
-        }
-
-        String modelName = getModelName((MethodReference) e, classMethods.get(calledMethodFQN));
-
-        if (null == modelName) {
-            return null;
-        }
-
-        return new PhpType().add("\\Ess_M2ePro_Model_" + modelName);
+    public char getKey() {
+        return 'Ъ';
     }
 
     @Nullable
-    private String getCalledMethodFQN(PsiElement e) {
+    @Override
+    public String getType(PsiElement e) {
         if (!(e instanceof MethodReference)) {
             return null;
         }
 
-        MethodReference methodReference = (MethodReference) e;
+        String refSignature = ((MethodReference)e).getSignature();
 
-        HashSet<String> factoryMethods = getFactoryMap(e.getProject()).getMethods();
-
-        String methodName = methodReference.getName();
-        if (!factoryMethods.contains(methodName)) {
+        if (!helperRegExpPattern.matcher(refSignature).find()) {
             return null;
         }
 
-        PsiReference psiReference = methodReference.getReference();
-        if (null == psiReference) {
+        PsiElement[] parameters = ((MethodReference)e).getParameters();
+
+        if (parameters.length == 0) {
             return null;
         }
 
-        PsiElement resolvedReference = psiReference.resolve();
-        if (!(resolvedReference instanceof Method)) {
+        String stringParameters = getStringParameters(parameters);
+
+        if (stringParameters.length() == 0) {
             return null;
         }
 
-        // i.e. \Ess_M2ePro_Helper_Component_Ebay.getModel
-        return ((Method)resolvedReference).getFQN();
+        return refSignature + TRIM_KEY + stringParameters;
     }
 
-    private String getModelName(MethodReference e, Integer factoryEntityArgumentPosition) {
-        String modelName = null;
+    private String getStringParameters(PsiElement[] parameters) {
+        String result = "";
 
-        PsiElement[] parameters = e.getParameters();
+        for (int i = 0; i < parameters.length; i++) {
+            PsiElement parameter = parameters[i];
 
-        if (parameters.length >= factoryEntityArgumentPosition && parameters[factoryEntityArgumentPosition] instanceof StringLiteralExpressionImpl) {
-            modelName = parameters[factoryEntityArgumentPosition].getText(); // quoted string
-            modelName = modelName.substring(1, modelName.length() - 1);
+            if (!(parameter instanceof StringLiteralExpression)) {
+                continue;
+            }
+
+            String stringParameter = ((StringLiteralExpression)parameter).getContents();
+
+            if (result.length() != 0) {
+                result += PARAM_SEPARATOR;
+            }
+
+            result += stringParameter;
         }
 
-        return modelName;
+        return result;
     }
 
-    private FactoryMap getFactoryMap(Project p) {
+    @Override
+    public Collection<? extends PhpNamedElement> getBySignature(String expression, Project project) {
+
+        // get back our original call
+        String originalSignature = expression.substring(0, expression.lastIndexOf(TRIM_KEY));
+        String stringParameters = expression.substring(expression.lastIndexOf(TRIM_KEY) + 1);
+
+        // search for called method
+        PhpIndex phpIndex = PhpIndex.getInstance(project);
+        Collection<? extends PhpNamedElement> phpNamedElementCollections = phpIndex.getBySignature(originalSignature, null, 0);
+        if (phpNamedElementCollections.size() == 0) {
+            return Collections.emptySet();
+        }
+
+        // get first matched item
+        PhpNamedElement phpNamedElement = phpNamedElementCollections.iterator().next();
+        if (!(phpNamedElement instanceof Method)) {
+            return Collections.emptySet();
+        }
+
+        int backslash = originalSignature.lastIndexOf('\\');
+
+        if (backslash == -1) {
+            return Collections.emptySet();
+        }
+
+        String signature = originalSignature.substring(backslash + 1);
+        Map<String, Integer> factoryMap = getFactoryMap(project);
+
+        if (!factoryMap.containsKey(signature)) {
+            return Collections.emptySet();
+        }
+
+        Integer entityArgumentPosition = factoryMap.get(signature);
+        String[] stringParametersArray = stringParameters.split(PARAM_SEPARATOR);
+
+        if (null == stringParametersArray[entityArgumentPosition]) {
+            return Collections.emptySet();
+        }
+
+        String stringParameter = stringParametersArray[entityArgumentPosition];
+        String fqn;
+
+        if (signature.endsWith("getCollection")) {
+            fqn = "\\Ess_M2ePro_Model_Mysql4_" + stringParameter + "_Collection";
+        } else {
+            fqn = "\\Ess_M2ePro_Model_" + stringParameter;
+        }
+
+        return PhpIndex.getInstance(project).getAnyByFQN(fqn);
+    }
+
+    private Map<String, Integer> getFactoryMap(Project p) {
         if (null == factoryMap) {
             factoryMap = p.getComponent(M2EProjectComponent.class).getFactoryMap();
         }
