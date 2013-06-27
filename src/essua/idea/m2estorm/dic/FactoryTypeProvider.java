@@ -19,6 +19,7 @@ public class FactoryTypeProvider implements PhpTypeProvider2 {
     private Map<String, Integer> factoryMap = null;
     final static char TRIM_KEY = '\u0180';
     final static String PARAM_SEPARATOR = "---";
+    final static String FAKE_PARAMETER = "___";
     private static Pattern helperRegExpPattern = Pattern.compile("Mage.helper.M2ePro/Component");
 
     @Override
@@ -60,15 +61,16 @@ public class FactoryTypeProvider implements PhpTypeProvider2 {
         for (int i = 0; i < parameters.length; i++) {
             PsiElement parameter = parameters[i];
 
+            if (result.length() != 0) {
+                result += PARAM_SEPARATOR;
+            }
+
             if (!(parameter instanceof StringLiteralExpression)) {
+                result += FAKE_PARAMETER;
                 continue;
             }
 
             String stringParameter = ((StringLiteralExpression)parameter).getContents();
-
-            if (result.length() != 0) {
-                result += PARAM_SEPARATOR;
-            }
 
             result += stringParameter;
         }
@@ -112,7 +114,7 @@ public class FactoryTypeProvider implements PhpTypeProvider2 {
         Integer entityArgumentPosition = factoryMap.get(signature);
         String[] stringParametersArray = stringParameters.split(PARAM_SEPARATOR);
 
-        if (null == stringParametersArray[entityArgumentPosition]) {
+        if (stringParametersArray.length < entityArgumentPosition) {
             return Collections.emptySet();
         }
 
