@@ -114,7 +114,7 @@ public class FactoryTypeProvider implements PhpTypeProvider2 {
         Integer entityArgumentPosition = factoryMap.get(signature);
         String[] stringParametersArray = stringParameters.split(PARAM_SEPARATOR);
 
-        if (stringParametersArray.length < entityArgumentPosition) {
+        if (stringParametersArray.length < entityArgumentPosition + 1) {
             return Collections.emptySet();
         }
 
