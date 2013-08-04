@@ -30,6 +30,7 @@ Example of the configuration file:
             <factory signature="Mage.helper.M2ePro/Component_Play.getObject" />
             <factory signature="Mage.helper.M2ePro/Component_Play.getCachedObject" />
             <factory signature="Mage.helper.M2ePro/Component_Play.getCollection" />
+            <factory signature="Mage.helper.M2ePro/Component.getUnknownObject" />
             <factory signature="Mage.helper.M2ePro/Component.getCachedComponentObject" entity_argument_position="1" />
         </factories>
     </config>
